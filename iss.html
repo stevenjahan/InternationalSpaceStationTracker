@@ -5,15 +5,18 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js" ></script>
 <script src="http://code.jquery.com/jquery-2.0.3.min.js"> </script>
+
 </head>
+
 <body>
 
-<div id ='map' style="width:1200px;height:800px;"></div>
+<div id ="map" style="width:1200px;height:800px"></div>
+
 <script>
 
 var map = L.map('map', {
     minZoom:1,
-    maxZoom:1
+    maxZoom:18
 });
 
 var cartodbAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attribution">CARTO</a>';
@@ -21,17 +24,46 @@ var positron = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/
     attribution: cartodbAttribution
 }).addTo(map);
 
-map.setView([0,0], 10);
+map.setZoom(8);
+
+var lat = -4;
+var lon = -4;
+
+function moveISS() {
 
 $.getJSON('http://localhost:8080/api/issLocation', function(data) {
-        var lat = data['iss_position']['latitude'];
-        var lon = data['iss_position']['longitude'];
+        lat = data['iss_position']['latitude'];
+ 	lon = data['iss_position']['longitude'];
         console.log('lat = ' + lat);
         console.log('lon = ' + lon);        
-        map.setView([lat, lon], map.getZoom());
-        map.flyTo(L.latLng(lat, lon), map.getZoom());
+	setMap(lat, lon);
+	drawCircle(lat, lon);
+}).error(function() {
+	L.popup()
+	.setLatLng(L.latLng(lat, lon))
+	.setContent('<p>Connection error!<br/>API unavailable.</p>')
+	.openOn(map);
+	
+	setMap(lat, lon);
 });
 
+setTimeout(moveISS, 5000);
+}
+
+function drawCircle(lat, lon) {
+	var circle = L.circle([lat, lon], {
+	color: "red",
+	fillColor: 'red',
+	fillOpacity: 0.5,
+	radius:30	
+	}).addTo(map);
+}
+
+function setMap(lat, lon) {
+	map.setView([lat, lon], map.getZoom());
+	map.flyTo(L.latLng(lat, lon), map.getZoom());
+}
+moveISS();
 </script>
 </body>
 
